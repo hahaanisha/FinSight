@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,9 +13,33 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final SpeechToText _speechToText = SpeechToText();
 
+  final apikey = 'AIzaSyA7LxDBz3bEPP1JkFjfbzdry5UIpu81H-A';
+
+  final FlutterTts _flutterTts = FlutterTts();
   bool _speechEnabled = false;
   String _wordsSpoken = "";
   double _confidenceLevel = 0;
+  String _Modelresponse="";
+  bool _isLoadingResponse=false;
+
+  Future<void> talkWithGemini() async{
+
+    final model = GenerativeModel(model: 'gemini-pro', apiKey: apikey);
+
+    final msg = _wordsSpoken+'keep the response to be short of 10-15 lines and keep tone that you are adressing as a sam named financial advisor';
+
+    final content = Content.text(msg);
+
+    final response = await model.generateContent([content]);
+
+    setState(() {
+      _Modelresponse = response.text!;
+    });
+    print('response : ${_Modelresponse}');
+
+  }
+
+
 
   @override
   void initState() {
@@ -35,13 +61,18 @@ class _HomePageState extends State<HomePage> {
 
   void _stopListening() async {
     await _speechToText.stop();
-    setState(() {});
+    setState(() {
+      print('generating');
+      talkWithGemini();
+    });
   }
+
 
   void _onSpeechResult(result) {
     setState(() {
       _wordsSpoken = "${result.recognizedWords}";
       _confidenceLevel = result.confidence;
+
     });
   }
 
@@ -90,16 +121,48 @@ class _HomePageState extends State<HomePage> {
             ),
             // Confidence level display
             if (!_speechToText.isListening && _confidenceLevel > 0)
+                InkWell(
+                  onTap: (){
+                    talkWithGemini();
+                  },
+                  child: Text(
+                      "Done: ${(_confidenceLevel * 100).toStringAsFixed(1)}%",
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w200,
+                      ),
+                    ),
+                ),
+
+
+
+            // Display model response or loading indicator
+            if (_isLoadingResponse)
               Padding(
-                padding: const EdgeInsets.only(bottom: 100),
-                child: Text(
-                  "Confidence: ${(_confidenceLevel * 100).toStringAsFixed(1)}%",
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w200,
+                padding: const EdgeInsets.all(6.0),
+                child: CircularProgressIndicator(),
+              )
+            else if (_Modelresponse.isNotEmpty)
+              SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: InkWell(
+                    onTap: (){
+                      _flutterTts.speak(_Modelresponse);
+                    },
+                    child: Text(
+                      "Response: $_Modelresponse",
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),
+
+
           ],
         ),
       ),
@@ -107,7 +170,11 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _speechToText.isListening ? _stopListening : _startListening,
         tooltip: 'Listen',
-        child: Icon(
+        child: _isLoadingResponse
+            ? CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        )
+            : Icon(
           _speechToText.isNotListening ? Icons.mic_off : Icons.mic,
           color: Colors.white,
         ),

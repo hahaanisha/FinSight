@@ -1,21 +1,140 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:provider/provider.dart';
+import 'package:url_launcher/link.dart';
 
-class ChatWidget extends StatefulWidget {
-  const ChatWidget({required this.apiKey, super.key});
 
-  final String apiKey;
+class GenerativeAISample extends StatelessWidget {
+  final dynamic wordsSpoken;
+
+  const GenerativeAISample({required this.wordsSpoken,super.key});
 
   @override
-  State<ChatWidget> createState() => _ChatWidgetState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Flutter + Generative AI',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          brightness: Brightness.dark,
+          seedColor: const Color.fromARGB(255, 171, 222, 244),
+        ),
+        useMaterial3: true,
+      ),
+      home: ChatScreen(title: 'Flutter + Generative AI', wordsSpoken: wordsSpoken,),
+    );
+  }
+}
+
+class ChatScreen extends StatefulWidget {
+  const ChatScreen({super.key, required this.title,required this.wordsSpoken});
+
+  final String title;
+
+  final dynamic wordsSpoken;
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  String? apiKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: switch (apiKey) {
+        final providedKey? => ChatWidget(wordsSpoken: widget.wordsSpoken,),
+        _ => ApiKeyWidget(onSubmitted: (key) {
+          setState(() => apiKey = key);
+        }),
+      },
+    );
+  }
+}
+
+class ApiKeyWidget extends StatelessWidget {
+  ApiKeyWidget({required this.onSubmitted, super.key});
+
+  final ValueChanged<String> onSubmitted;
+  final TextEditingController _textController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'To use the Gemini API, you\'ll need an API key. '
+                  'If you don\'t already have one, '
+                  'create a key in Google AI Studio.',
+            ),
+            const SizedBox(height: 8),
+            Link(
+              uri: Uri.https('makersuite.google.com', '/app/apikey'),
+              target: LinkTarget.blank,
+              builder: (context, followLink) => TextButton(
+                onPressed: followLink,
+                child: const Text('Get an API Key'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration:
+                    textFieldDecoration(context, 'Enter your API key'),
+                    controller: _textController,
+                    onSubmitted: (value) {
+                      onSubmitted(value);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () {
+                    onSubmitted(_textController.value.text);
+                  },
+                  child: const Text('Submit'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ChatWidget extends StatefulWidget {
+  const ChatWidget({ required this.wordsSpoken, super.key});
+
+  final String apiKey='AIzaSyA7LxDBz3bEPP1JkFjfbzdry5UIpu81H-A';
+
+  final dynamic wordsSpoken;
+
+  @override
+  State<ChatWidget> createState() => _ChatWidgetState(wordsSpoken: wordsSpoken);
 }
 
 class _ChatWidgetState extends State<ChatWidget> {
+  _ChatWidgetState({ required this.wordsSpoken});
+
   late final GenerativeModel _model;
   late final ChatSession _chat;
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _textFieldFocus = FocusNode(debugLabel: 'TextField');
   bool _loading = false;
+
+  final dynamic wordsSpoken;
 
   @override
   void initState() {
@@ -27,21 +146,13 @@ class _ChatWidgetState extends State<ChatWidget> {
     _chat = _model.startChat();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Listen to changes in wordsSpoken from HomePage
-    final wordsSpoken = context.watch<String>();
-    if (wordsSpoken.isNotEmpty) {
-      _sendChatMessage(wordsSpoken);
-    }
-  }
-
   void _scrollDown() {
     WidgetsBinding.instance.addPostFrameCallback(
           (_) => _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 750),
+        duration: const Duration(
+          milliseconds: 750,
+        ),
         curve: Curves.easeOutCirc,
       ),
     );
@@ -53,6 +164,8 @@ class _ChatWidgetState extends State<ChatWidget> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: ListView.builder(
@@ -71,7 +184,41 @@ class _ChatWidgetState extends State<ChatWidget> {
               itemCount: history.length,
             ),
           ),
-          if (_loading) const CircularProgressIndicator(),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 25,
+              horizontal: 15,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    autofocus: true,
+                    focusNode: _textFieldFocus,
+                    decoration:
+                    textFieldDecoration(context, 'Enter a prompt...'),
+                    controller: _textController,
+                    onSubmitted: (String value) {
+                      _sendChatMessage(value);
+                    },
+                  ),
+                ),
+                const SizedBox.square(dimension: 15),
+                if (!_loading)
+                  IconButton(
+                    onPressed: () async {
+                      _sendChatMessage(wordsSpoken.text);
+                    },
+                    icon: Icon(
+                      Icons.send,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  )
+                else
+                  const CircularProgressIndicator(),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -90,6 +237,7 @@ class _ChatWidgetState extends State<ChatWidget> {
 
       if (text == null) {
         _showError('Empty response.');
+        return;
       } else {
         setState(() {
           _loading = false;
@@ -98,10 +246,15 @@ class _ChatWidgetState extends State<ChatWidget> {
       }
     } catch (e) {
       _showError(e.toString());
-    } finally {
       setState(() {
         _loading = false;
       });
+    } finally {
+      _textController.clear();
+      setState(() {
+        _loading = false;
+      });
+      _textFieldFocus.requestFocus();
     }
   }
 
@@ -158,10 +311,32 @@ class MessageWidget extends StatelessWidget {
               horizontal: 20,
             ),
             margin: const EdgeInsets.only(bottom: 8),
-            child: Text(text),
+            child: MarkdownBody(data: text),
           ),
         ),
       ],
     );
   }
 }
+
+InputDecoration textFieldDecoration(BuildContext context, String hintText) =>
+    InputDecoration(
+      contentPadding: const EdgeInsets.all(15),
+      hintText: hintText,
+      border: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(
+          Radius.circular(14),
+        ),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.secondary,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(
+          Radius.circular(14),
+        ),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.secondary,
+        ),
+      ),
+    );
