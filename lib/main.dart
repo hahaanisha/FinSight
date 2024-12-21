@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'Auth/loginPage.dart';
 import 'Pages/BottomNavBar.dart';
 import 'Pages/home_page.dart';
 import 'Pages/tp.dart';
@@ -16,8 +17,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
+
         // This is the theme of your application.
         //
         // TRY THIS: Try running your application with "flutter run". You'll see
@@ -36,7 +39,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: BottomNavBarPage(),
+      home: HomeAuthPage(),
     );
   }
 }
