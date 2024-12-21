@@ -36,6 +36,10 @@ dependencies:
   url_launcher: ^6.1.8
   provider: ^6.0.4
   flutter_tts: ^4.2.0
+  easy_upi_payment: ^0.1.6
+  permission_handler: ^11.3.1
+  contacts_service: ^0.6.3
+
 
 
 

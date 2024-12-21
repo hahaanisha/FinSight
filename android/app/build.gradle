@@ -43,6 +43,9 @@ android {
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
+    dependencies {
+        implementation "dev.shreyaspatil.EasyUpiPayment:EasyUpiPayment:3.0.3"
+    }
 
     buildTypes {
         release {
