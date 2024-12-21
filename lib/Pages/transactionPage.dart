@@ -3,7 +3,10 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:permission_handler/permission_handler.dart'; // For runtime permissions
-import 'package:easy_upi_payment/easy_upi_payment.dart'; // For UPI payment
+import 'package:easy_upi_payment/easy_upi_payment.dart';
+import 'package:testvjti/Pages/BottomNavBar.dart';
+
+import 'Colors.dart'; // For UPI payment
 
 class TransactionPage extends StatefulWidget {
   const TransactionPage({super.key});
@@ -129,17 +132,17 @@ class _TransactionPageState extends State<TransactionPage> {
     } catch (e) {
       print(e);
       _flutterTts.speak('Transaction failed. Please try again.');
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => BottomNavBarPage()),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: InkWell(
-            onTap:  _flutterTts.stop,
-            child: const Text('Voice-based Transaction')),
-      ),
+
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -203,10 +206,26 @@ class _TransactionPageState extends State<TransactionPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _speechToText.isListening ? _stopListening : _startListening,
-        child: Icon(
-          _speechToText.isListening ? Icons.mic : Icons.mic_off,
+      floatingActionButton: InkWell(
+        onTap: (){
+
+        },
+        child: Container(
+
+          width: MediaQuery.of(context).size.width*0.95,
+          height: MediaQuery.of(context).size.height*0.2,
+
+          decoration: BoxDecoration(
+            color:appBlue,
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: FloatingActionButton(
+            backgroundColor: appBlue,
+            onPressed: _speechToText.isListening ? _stopListening : _startListening,
+            child: Icon(
+              _speechToText.isListening ? Icons.mic : Icons.mic_off,color: Colors.white,size: MediaQuery.of(context).size.height*0.1,
+            ),
+          ),
         ),
       ),
     );

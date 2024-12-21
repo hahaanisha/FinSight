@@ -3,6 +3,8 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 
+import 'Colors.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -26,10 +28,10 @@ class _HomePageState extends State<HomePage> {
   Future<void> talkWithGemini() async {
     final model = GenerativeModel(model: 'gemini-pro', apiKey: apikey);
 
-    final msg = _wordsSpoken +
-        '''
-    You are a friendly financial advisor named Sam, specialized in helping visually impaired users manage their finances. Based on their questions ask followup questions one by one to understand their financial needs better and based on the user's responses, provide concise and personalized financial advice in 50 words without any symbol. Ensure your tone is supportive and encouraging, and your suggestions are easy to understand. Make sure to confirm the user's answers before proceeding to the next steps.
-    ''';
+    final msg = _wordsSpoken; //+
+    //     '''
+    // You are a friendly financial advisor named Sam, specialized in helping visually impaired users manage their finances. Based on their questions ask followup questions one by one to understand their financial needs better and based on the user's responses, provide concise and personalized financial advice in 50 words without any symbol. Ensure that you dont your tone is supportive and encouraging, and your suggestions are easy to understand. Make sure to confirm the user's answers before proceeding to the next steps.
+    // ''';
 
 
     final content = Content.text(msg);
@@ -86,16 +88,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.red,
-        title: const Text(
-          'FINSIGHT',
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-      ),
+
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -118,7 +111,7 @@ class _HomePageState extends State<HomePage> {
               onTap: _speechToText.isListening ? _stopListening : _startListening,
               child: CircleAvatar(
                 radius: 50,
-                backgroundColor: Colors.red,
+                backgroundColor: appBlue,
                 child: Icon(
                   _speechToText.isListening ? Icons.mic : Icons.mic_off,
                   color: Colors.white,
