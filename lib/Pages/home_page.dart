@@ -16,17 +16,21 @@ class _HomePageState extends State<HomePage> {
   final apikey = 'AIzaSyA7LxDBz3bEPP1JkFjfbzdry5UIpu81H-A';
 
   final FlutterTts _flutterTts = FlutterTts();
+
   bool _speechEnabled = false;
   String _wordsSpoken = "";
   double _confidenceLevel = 0;
-  String _Modelresponse="";
-  bool _isLoadingResponse=false;
+  String _Modelresponse = "";
+  bool _isLoadingResponse = false;
 
-  Future<void> talkWithGemini() async{
-
+  Future<void> talkWithGemini() async {
     final model = GenerativeModel(model: 'gemini-pro', apiKey: apikey);
 
-    final msg = _wordsSpoken+'keep the response to be short of 10-15 lines and keep tone that you are adressing as a sam named financial advisor';
+    final msg = _wordsSpoken +
+        '''
+    You are a friendly financial advisor named Sam, specialized in helping visually impaired users manage their finances. Based on their questions ask followup questions one by one to understand their financial needs better and based on the user's responses, provide concise and personalized financial advice in 50 words without any symbol. Ensure your tone is supportive and encouraging, and your suggestions are easy to understand. Make sure to confirm the user's answers before proceeding to the next steps.
+    ''';
+
 
     final content = Content.text(msg);
 
@@ -35,16 +39,20 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _Modelresponse = response.text!;
     });
-    print('response : ${_Modelresponse}');
 
+    _flutterTts.speak(_Modelresponse);
+    print('response : ${_Modelresponse}');
   }
 
-
+  Future<void> _speakHello() async {
+    await _flutterTts.speak('Hello Welcome to 24/7 Customer Support. How may I help You.');
+  }
 
   @override
   void initState() {
     super.initState();
     initSpeech();
+    _speakHello();
   }
 
   void initSpeech() async {
@@ -63,16 +71,15 @@ class _HomePageState extends State<HomePage> {
     await _speechToText.stop();
     setState(() {
       print('generating');
-      talkWithGemini();
+      // talkWithGemini();
     });
   }
-
 
   void _onSpeechResult(result) {
     setState(() {
       _wordsSpoken = "${result.recognizedWords}";
       _confidenceLevel = result.confidence;
-
+      talkWithGemini();
     });
   }
 
@@ -81,104 +88,89 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.red,
-        title: Text(
-          'Speech Demo',
+        title: const Text(
+          'FINSIGHT',
           style: TextStyle(
             color: Colors.white,
           ),
         ),
+        centerTitle: true,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Speech status display
-            Container(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                _speechToText.isListening
-                    ? "Listening..."
-                    : _speechEnabled
-                    ? "Tap the microphone to start listening..."
-                    : "Speech not available",
-                style: TextStyle(fontSize: 20.0),
+            // Display prompt text
+            const Text(
+              "Tap the microphone to start",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w400,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Microphone button
+            GestureDetector(
+              onTap: _speechToText.isListening ? _stopListening : _startListening,
+              child: CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.red,
+                child: Icon(
+                  _speechToText.isListening ? Icons.mic : Icons.mic_off,
+                  color: Colors.white,
+                  size: 40,
+                ),
               ),
             ),
-            // Display words spoken
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.all(16),
+
+            const SizedBox(height: 20),
+
+            // Display words spoken or loading indicator
+            if (_speechToText.isListening || _wordsSpoken.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: Text(
-                  _wordsSpoken,
+                  _speechToText.isListening ? "Listening..." : _wordsSpoken,
                   style: const TextStyle(
-                    fontSize: 25,
+                    fontSize: 18,
                     fontWeight: FontWeight.w300,
                   ),
                   textAlign: TextAlign.center,
                 ),
               ),
-            ),
-            // Confidence level display
-            if (!_speechToText.isListening && _confidenceLevel > 0)
-                InkWell(
-                  onTap: (){
-                    talkWithGemini();
-                  },
-                  child: Text(
-                      "Done: ${(_confidenceLevel * 100).toStringAsFixed(1)}%",
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w200,
-                      ),
-                    ),
-                ),
-
-
 
             // Display model response or loading indicator
             if (_isLoadingResponse)
-              Padding(
-                padding: const EdgeInsets.all(6.0),
+              const Padding(
+                padding: EdgeInsets.all(6.0),
                 child: CircularProgressIndicator(),
               )
             else if (_Modelresponse.isNotEmpty)
               SingleChildScrollView(
+                scrollDirection: Axis.vertical,
                 child: Padding(
-                  padding: const EdgeInsets.all(6.0),
-                  child: InkWell(
-                    onTap: (){
-                      _flutterTts.speak(_Modelresponse);
+                  padding: const EdgeInsets.all(5),
+                  child: GestureDetector(
+                    onTap: () {
+                      _flutterTts.stop();
                     },
                     child: Text(
                       "Response: $_Modelresponse",
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                      style: const TextStyle(
+                        fontSize: 5,
+                        fontWeight: FontWeight.w400,
                       ),
                       textAlign: TextAlign.center,
                     ),
                   ),
                 ),
               ),
-
-
           ],
         ),
-      ),
-      // Floating action button for starting/stopping speech recognition
-      floatingActionButton: FloatingActionButton(
-        onPressed: _speechToText.isListening ? _stopListening : _startListening,
-        tooltip: 'Listen',
-        child: _isLoadingResponse
-            ? CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        )
-            : Icon(
-          _speechToText.isNotListening ? Icons.mic_off : Icons.mic,
-          color: Colors.white,
-        ),
-        backgroundColor: Colors.red,
       ),
     );
   }

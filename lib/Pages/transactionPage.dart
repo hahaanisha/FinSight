@@ -23,11 +23,14 @@ class _TransactionPageState extends State<TransactionPage> {
   bool _isFetchingContacts = false;
 
   List<Map<String, String>> _filteredContacts = [];
-
+  Future<void> _speakHello() async {
+    await _flutterTts.speak('Hello Welcome to Finsight Transactions.');
+  }
   @override
   void initState() {
     super.initState();
     initSpeech();
+    _speakHello();
   }
 
   void initSpeech() async {
@@ -133,7 +136,9 @@ class _TransactionPageState extends State<TransactionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Voice-based Transaction'),
+        title: InkWell(
+            onTap:  _flutterTts.stop,
+            child: const Text('Voice-based Transaction')),
       ),
       body: Center(
         child: Column(
@@ -159,7 +164,7 @@ class _TransactionPageState extends State<TransactionPage> {
                     return ListTile(
                       title: Text(_filteredContacts[index]['name']!),
                       subtitle: Text(_filteredContacts[index]['number']!),
-                      onTap: () {
+                      onTap: (){
                         setState(() {
                           _selectedContactName = _filteredContacts[index]['name']!;
                           _selectedContactNumber = _filteredContacts[index]['number']!;
@@ -167,6 +172,7 @@ class _TransactionPageState extends State<TransactionPage> {
                         _flutterTts.speak(
                             'How much money would you like to transfer to $_selectedContactName?');
                       },
+
                     );
                   },
                 ),

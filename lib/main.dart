@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'Pages/BottomNavBar.dart';
 import 'Pages/home_page.dart';
 import 'Pages/tp.dart';
 import 'Pages/transactionPage.dart';
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: TransactionPage(),
+      home: BottomNavBarPage(),
     );
   }
 }
