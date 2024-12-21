@@ -5,8 +5,8 @@ import 'package:contacts_service/contacts_service.dart';
 import 'package:permission_handler/permission_handler.dart'; // For runtime permissions
 import 'package:easy_upi_payment/easy_upi_payment.dart';
 import 'package:testvjti/Pages/BottomNavBar.dart';
-
 import 'Colors.dart'; // For UPI payment
+import 'package:testvjti/Pages/BottomNavBar.dart'; // For UPI payment
 
 class TransactionPage extends StatefulWidget {
   const TransactionPage({super.key});
@@ -24,6 +24,7 @@ class _TransactionPageState extends State<TransactionPage> {
   String _selectedContactNumber = "";
   String _transactionAmount = "";
   bool _isFetchingContacts = false;
+  int _amount=10000;
 
   List<Map<String, String>> _filteredContacts = [];
   Future<void> _speakHello() async {
@@ -61,7 +62,11 @@ class _TransactionPageState extends State<TransactionPage> {
     if (_wordsSpoken.toLowerCase().contains('transfer money to')) {
       String name = _wordsSpoken.split('to').last.trim();
       await fetchContacts(name);
-    } else if (_filteredContacts.isNotEmpty && _selectedContactName.isEmpty) {
+    } else if((_wordsSpoken.toLowerCase().contains('check my bank balance'))){
+      _flutterTts.speak('your Bank Balance is:$_amount');
+    }
+
+    else if (_filteredContacts.isNotEmpty && _selectedContactName.isEmpty) {
       _selectedContactName = _wordsSpoken;
       var selectedContact = _filteredContacts.firstWhere(
             (contact) => contact['name']?.toLowerCase() == _selectedContactName.toLowerCase(),
@@ -73,6 +78,7 @@ class _TransactionPageState extends State<TransactionPage> {
       _transactionAmount = _wordsSpoken.replaceAll(RegExp(r'\D'), '');
       _flutterTts.speak(
           'You are transferring ₹$_transactionAmount to $_selectedContactName. Please confirm to proceed.');
+      _amount -= _transactionAmount as int;
     } else if (_transactionAmount.isNotEmpty) {
       // Call the sendMoney function here
       await sendMoney();
@@ -126,12 +132,15 @@ class _TransactionPageState extends State<TransactionPage> {
           description: 'Payment to $_selectedContactName',
         ),
       );
+
+
       // TODO: Add your success logic here
       print(res);
-      _flutterTts.speak('Transaction completed successfully.');
+      _flutterTts.speak('Transaction completed successfully. ');
     } catch (e) {
       print(e);
       _flutterTts.speak('Transaction failed. Please try again.');
+      // Navigator.pop(context);
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => BottomNavBarPage()),

@@ -4,6 +4,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:testvjti/Pages/transactionPage.dart';
 
 import 'Colors.dart';
+import 'CustomerSupport.dart';
 import 'home_page.dart';
 
 class BottomNavBarPage extends StatefulWidget {
@@ -58,7 +59,9 @@ appBar: AppBar(
         onPageChanged: _onPageChanged,
         children: [
           HomePage(),
+          CustomerSupport(),
           TransactionPage(),
+
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -66,12 +69,16 @@ appBar: AppBar(
         onTap: _onItemTapped,
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: "Page 1",
+            icon: Icon(Icons.account_balance),
+            label: "Financial Advisor",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Page 2",
+            icon: Icon(Icons.account_box_rounded),
+            label: "Customer Support",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.money),
+            label: "Transactions",
           ),
         ],
       ),

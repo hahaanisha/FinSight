@@ -44,10 +44,11 @@ class _HomePageState extends State<HomePage> {
 
     _flutterTts.speak(_Modelresponse);
     print('response : ${_Modelresponse}');
+
   }
 
   Future<void> _speakHello() async {
-    await _flutterTts.speak('Hello Welcome to 24/7 Customer Support. How may I help You.');
+    await _flutterTts.speak('Hello Welcome to your 24/7 Financial Advisor, Swipe left to access Customer Service .How may I help You.');
   }
 
   @override
