@@ -1,22 +1,20 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:http/http.dart' as http;
 
 import 'Colors.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class TestModel extends StatefulWidget {
+  const TestModel({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<TestModel> createState() => _TestModelState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _TestModelState extends State<TestModel> {
   final SpeechToText _speechToText = SpeechToText();
-
-  final apikey = 'AIzaSyA7LxDBz3bEPP1JkFjfbzdry5UIpu81H-A';
-
   final FlutterTts _flutterTts = FlutterTts();
 
   bool _speechEnabled = false;
@@ -25,38 +23,78 @@ class _HomePageState extends State<HomePage> {
   String _Modelresponse = "";
   bool _isLoadingResponse = false;
 
+  // Replace this with your actual API key
+  final String apiKey = 'AIzaSyA7LxDBz3bEPP1JkFjfbzdry5UIpu81H-A';
+  final String endpoint =
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
   Future<void> talkWithGemini() async {
-    final model = GenerativeModel(model: 'gemini-pro', apiKey: apikey);
-
-    // final msg = _wordsSpoken+'Give just a plain TTS friendly and direct on point text without any bold letters or symbols';
-    // //     '''
-    // // You are a friendly financial advisor named Sam, specialized in helping visually impaired users manage their finances. Based on their questions ask followup questions one by one to understand their financial needs better and based on the user's responses, provide concise and personalized financial advice in 50 words without any symbol. Ensure that you dont your tone is supportive and encouraging, and your suggestions are easy to understand. Make sure to confirm the user's answers before proceeding to the next steps.
-    // // ''';
-
-    final msg = '''
-You are a friendly financial advisor named Sam, specialized in helping visually impaired users manage their finances. Provide concise, actionable, and TTS-friendly advice in response to the user's query. Avoid bold letters, symbols, or complex words.
-
-Query: "$_wordsSpoken"
-
-Make sure your tone is supportive and easy to understand. Keep the response under 50 words.
-''';
-
-
-    final content = Content.text(msg);
-
-    final response = await model.generateContent([content]);
-
     setState(() {
-      _Modelresponse = response.text!;
+      _isLoadingResponse = true;
     });
 
-    _flutterTts.speak(_Modelresponse);
-    print('response : ${_Modelresponse}');
+    // Construct the request payload
+    final requestPayload = {
+      'contents': [
+        {
+          'parts': [
+            {
+              'text': _wordsSpoken + ' give me in 50 words',
+            }
+          ]
+        }
+      ]
+    };
 
+    try {
+      // Make a POST request to your custom Gemini model's API
+      final response = await http.post(
+        Uri.parse(endpoint + '?key=' + apiKey),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestPayload),
+      );
+
+      if (response.statusCode == 200) {
+        final responseBody = jsonDecode(response.body);
+
+        // Check if the response contains candidates and parts
+        if (responseBody['candidates'] != null && responseBody['candidates'].isNotEmpty) {
+          final candidate = responseBody['candidates'][0];
+          if (candidate['content'] != null && candidate['content']['parts'] != null && candidate['content']['parts'].isNotEmpty) {
+            setState(() {
+              _Modelresponse = candidate['content']['parts'][0]['text'] ?? 'No response text';
+              _isLoadingResponse = false;
+            });
+            _flutterTts.speak(_Modelresponse);  // Read out the response
+            print('Model response: $_Modelresponse');
+          } else {
+            setState(() {
+              _Modelresponse = 'Error: No valid parts in response';
+              _isLoadingResponse = false;
+            });
+          }
+        } else {
+          setState(() {
+            _Modelresponse = 'Error: No candidates in response';
+            _isLoadingResponse = false;
+          });
+        }
+      } else {
+        setState(() {
+          _isLoadingResponse = false;
+          _Modelresponse = 'Error: ${response.statusCode} - ${response.body}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingResponse = false;
+        _Modelresponse = 'Error: $e';
+      });
+    }
   }
 
   Future<void> _speakHello() async {
-    await _flutterTts.speak('Hello Welcome to your 24/7 Financial Advisor, Swipe left to access Customer Service .How may I help You.');
+    await _flutterTts.speak('Hello Welcome to your 24/7 Financial Advisor, Swipe left to access Customer Service. How may I help You.');
   }
 
   @override
@@ -82,7 +120,6 @@ Make sure your tone is supportive and easy to understand. Keep the response unde
     await _speechToText.stop();
     setState(() {
       print('generating');
-      // talkWithGemini();
     });
   }
 
@@ -90,31 +127,33 @@ Make sure your tone is supportive and easy to understand. Keep the response unde
     setState(() {
       _wordsSpoken = "${result.recognizedWords}";
       _confidenceLevel = result.confidence;
-      talkWithGemini();
+      talkWithGemini();  // Send words spoken to Gemini API
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Display prompt text
-            const Text(
-              "Tap the microphone to start",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w400,
+            InkWell(
+              onTap: () {
+                talkWithGemini();
+              },
+              child: const Text(
+                "Tap the microphone to start",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w400,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
-
             const SizedBox(height: 20),
-
             // Microphone button
             GestureDetector(
               onTap: _speechToText.isListening ? _stopListening : _startListening,
@@ -128,9 +167,7 @@ Make sure your tone is supportive and easy to understand. Keep the response unde
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-
             // Display words spoken or loading indicator
             if (_speechToText.isListening || _wordsSpoken.isNotEmpty)
               Padding(
@@ -144,7 +181,6 @@ Make sure your tone is supportive and easy to understand. Keep the response unde
                   textAlign: TextAlign.center,
                 ),
               ),
-
             // Display model response or loading indicator
             if (_isLoadingResponse)
               const Padding(
@@ -163,7 +199,7 @@ Make sure your tone is supportive and easy to understand. Keep the response unde
                     child: Text(
                       "Response: $_Modelresponse",
                       style: const TextStyle(
-                        fontSize: 5,
+                        fontSize: 18,
                         fontWeight: FontWeight.w400,
                       ),
                       textAlign: TextAlign.center,

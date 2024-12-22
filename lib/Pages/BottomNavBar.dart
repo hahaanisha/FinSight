@@ -5,6 +5,7 @@ import 'package:testvjti/Pages/transactionPage.dart';
 
 import 'Colors.dart';
 import 'CustomerSupport.dart';
+import 'TestModel.dart';
 import 'home_page.dart';
 
 class BottomNavBarPage extends StatefulWidget {
@@ -58,7 +59,7 @@ appBar: AppBar(
         controller: _pageController,
         onPageChanged: _onPageChanged,
         children: [
-          HomePage(),
+          TestModel(),
           CustomerSupport(),
           TransactionPage(),
 
