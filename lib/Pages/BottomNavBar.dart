@@ -2,10 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:testvjti/Pages/transactionPage.dart';
+import 'package:testvjti/Pages/user_list_page.dart';
 
 import 'Colors.dart';
 import 'CustomerSupport.dart';
+import 'QrCodePage.dart';
 import 'TestModel.dart';
+import 'add_user_page.dart';
 import 'home_page.dart';
 
 class BottomNavBarPage extends StatefulWidget {
@@ -44,15 +47,54 @@ appBar: AppBar(
     onTap: (){
       _flutterTts.stop();
     },
-    child: const Text(
-      '⠠⠋⠊⠝⠠⠎⠊⠣⠞ ',
-      style: TextStyle(
-          color: Colors.white,
-          fontSize: 25,
-          fontWeight: FontWeight.bold
-      ),
+    child: Row(
+      children: [
+
+        Text(
+          '⠠⠋⠊⠝⠠⠎⠊⠣⠞ ',
+          style: TextStyle(
+              color: Colors.white,
+              fontSize: 25,
+              fontWeight: FontWeight.bold
+          ),
+        ),
+        SizedBox(width: 10,),
+
+
+        InkWell(
+            onTap: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddUserPage()),
+              );
+            },
+            child: Icon(Icons.add,color: Colors.white,)),
+        SizedBox(width: 10,),
+
+
+        InkWell(
+            onTap: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => UserListPage()),
+              );
+            },
+            child: Icon(Icons.list,color: Colors.white,)),
+        SizedBox(width: 10,),
+
+
+        InkWell(
+            onTap: (){
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => QRScannerPage()),
+              );
+            },
+            child: Icon(Icons.list,color: Colors.white,)),
+      ],
     ),
   ),
+
   centerTitle: true,
 ),
       body: PageView(
