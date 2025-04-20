@@ -8,6 +8,10 @@ The goal of this FinSight is to create a Voice-Based AI Customer Care platform f
 
 ## Features
 
+<p align="center">
+  <img src="Assets/Flow.png" alt="Architecture Diagram" style="width:750px;" />
+</p>
+
 ### 1. **AI-Driven Financial Insights**
    Leverage AI-driven financial insights using **Gemini** to deliver tailored recommendations on savings, budgeting, and investments. This empowers users to make informed financial decisions and improve their financial literacy.
 
