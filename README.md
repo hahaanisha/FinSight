@@ -2,7 +2,9 @@
 
 The goal of this FinSight is to create a Voice-Based AI Customer Care platform for visually impaired users, enabling them to access financial services via voice commands. The system will allow users to check balances, pay bills, transfer money, and get personalized financial advice — all via voice interactions.
 
-![Logo](logo.png)
+<p align="center">
+  <img src="Assets/logo1.png" alt="Architecture Diagram" style="width:400px;" />
+</p>
 
 ## Features
 
